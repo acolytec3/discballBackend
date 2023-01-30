@@ -1,0 +1,6 @@
+{
+    "tasks": {
+      "start": "deno run --allow-env --allow-net --allow-read=.env,.env.defaults --watch ./server.ts"
+    }
+  }
+  
