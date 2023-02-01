@@ -1,7 +1,8 @@
-import "https://deno.land/x/dotenv/load.ts";
+import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import { queryFauna } from "./helpers/fauna.ts";
 import { getFloorPrice } from "./helpers/getFloorPrice.ts";
 
+const token = Deno.env.get("DISCORD_TOKEN");
 const webhook = Deno.env.get("WEBHOOK_URL");
 export const subscription = async (req: Request): Promise<Response> => {
   const query = `
@@ -44,17 +45,27 @@ export const subscription = async (req: Request): Promise<Response> => {
       }
     }
   }
-  console.log(notifications);
 
   for (const notification of notifications) {
-    await fetch(webhook!, {
+    const res = await fetch("https://discord.com/api/users/@me/channels", {
+      body: JSON.stringify({ recipient_id: notification.userName }),
       method: "POST",
       headers: {
+        authorization: `Bot ${token}`,
+        "content-type": "application/json",
+      },
+    });
+
+    const id = await res.json();
+
+    await fetch(`https://discord.com/api/channels/${id.id}/messages`, {
+      method: "POST",
+      headers: {
+        authorization: `Bot ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: "Floor Watcher",
-        content: `<@${notification.userName}>, ${notification.collection} is at ${notification.floorPrice}, ${notification.direction} your target`,
+        content: `${notification.collection} is at ${notification.floorPrice}, ${notification.direction} your target`,
       }),
     });
   }

@@ -34,6 +34,7 @@ export const getFloorPrice = async (
         }),
       });
       const json = await res.json();
+      console.log(json)
       return json.project_stats[0].floor_price;
     }
     default:
