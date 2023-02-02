@@ -1,0 +1,12 @@
+name: notify
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron: '5/5 * * * *'
+
+jobs:
+  notify_friends:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call notification service
+        run: curl https://acolytec3-discball-ackend.deno.dev
