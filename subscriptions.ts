@@ -18,6 +18,11 @@ export const subscription = async (req: Request): Promise<Response> => {
     const subsToKeep: Subscription[] = [];
     for (const sub of subs.notice) {
       const fpDeets = await getFloorPrice(sub.collection, sub.chain)
+      if (fpDeets.fp === "") {
+        // If floor price retrieval returns blank, skip notification
+        subsToKeep.push(sub);
+        continue
+      }
       const fp = parseFloat(fpDeets.fp);
       if (sub.direction === "above") {
         if (fp > parseFloat(sub.price)) {

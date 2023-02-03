@@ -22,7 +22,6 @@ export const updateSubscriptionsQuery = (
   query = query.replace(/\"price\"/g, "price");
   query = query.replace(/\"chain\"/g, "chain");
   query = query.replace(/\"direction\"/g, "direction");
-  console.log("the query", query);
   return query;
 };
 

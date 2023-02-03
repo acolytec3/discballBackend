@@ -8,6 +8,7 @@ export const getFloorPrice = async (
   collection: string,
   chain: string
 ): Promise<{ fp: string, content: string}> => {
+  try {
   switch (chain) {
     case "eth": {
       const options: any = {
@@ -46,5 +47,12 @@ export const getFloorPrice = async (
     }
     default:
       throw new Error('no floor price found')
+  }}
+  catch {
+    // If floor price retrieval fails, just return blank data
+    return {
+      fp: "",
+      content: ""
+    }
   }
 };
