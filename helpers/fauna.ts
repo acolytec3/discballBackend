@@ -24,7 +24,6 @@ export async function queryFauna(
       });
   
       const { data, errors } = await res.json();
-      console.log(errors)
       if (errors) {
         // Return the first error if there are any.
         return { data, error: errors[0] };

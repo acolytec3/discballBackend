@@ -66,7 +66,7 @@ export const subscription = async (req: Request): Promise<Response> => {
 
       const id = await res.json();
 
-      const embedFields = notifications.map((notification) => {
+      const embedFields: any[] = notifications.map((notification) => {
         return {
           title: `${notification.collection} - ${notification.price} ${notification.chain.toUpperCase()}`,
           url: notification.domain
