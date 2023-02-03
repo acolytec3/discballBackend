@@ -14,17 +14,19 @@ export const subscription = async (req: Request): Promise<Response> => {
   const res = await queryFauna(query, {});
 
   for (const subs of res.data.allNotifications.data) {
-    const notifications: Subscription[] = [];
+    const notifications: any[] = [];
     const subsToKeep: Subscription[] = [];
     for (const sub of subs.notice) {
-      const fp = parseFloat(await getFloorPrice(sub.collection, sub.chain));
+      const fpDeets = await getFloorPrice(sub.collection, sub.chain)
+      const fp = parseFloat(fpDeets.fp);
       if (sub.direction === "above") {
         if (fp > parseFloat(sub.price)) {
           notifications.push({
             collection: sub.collection,
             direction: "above",
             price: fp,
-            chain: sub.chain,
+            domain: fpDeets.content,
+            chain: sub.chain
           });
         } else {
           subsToKeep.push(sub);
@@ -33,9 +35,10 @@ export const subscription = async (req: Request): Promise<Response> => {
         if (fp < parseFloat(sub.price)) {
           notifications.push({
             collection: sub.collection,
-            direction: "below",
+            direction: "above",
             price: fp,
-            chain: sub.chain,
+            domain: fpDeets.content,
+            chain: sub.chain
           });
         } else {
           subsToKeep.push(sub);
@@ -51,39 +54,38 @@ export const subscription = async (req: Request): Promise<Response> => {
         subsToKeep
       );
       await queryFauna(query, {});
+
+      const res = await fetch("https://discord.com/api/users/@me/channels", {
+        body: JSON.stringify({ recipient_id: subs.userName }),
+        method: "POST",
+        headers: {
+          authorization: `Bot ${token}`,
+          "content-type": "application/json",
+        },
+      });
+
+      const id = await res.json();
+
+      const embedFields = notifications.map((notification) => {
+        return {
+          title: `${notification.collection} - ${notification.price} ${notification.chain.toUpperCase()}`,
+          url: notification.domain
+        };
+      });
+      embedFields.unshift({
+        title: 'Your Floor Price Alerts'
+      })
+      await fetch(`https://discord.com/api/channels/${id.id}/messages`, {
+        method: "POST",
+        headers: {
+          authorization: `Bot ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: embedFields
+        }),
+      });
     }
-
-    const res = await fetch("https://discord.com/api/users/@me/channels", {
-      body: JSON.stringify({ recipient_id: subs.userName }),
-      method: "POST",
-      headers: {
-        authorization: `Bot ${token}`,
-        "content-type": "application/json",
-      },
-    });
-
-    const id = await res.json();
-    const embedFields = notifications.map((notification) => {
-      return {
-        name: notification.collection,
-        value: `${notification.price} ${notification.chain.toUpperCase()}`,
-      };
-    });
-    await fetch(`https://discord.com/api/channels/${id.id}/messages`, {
-      method: "POST",
-      headers: {
-        authorization: `Bot ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        embeds: [
-          {
-            title: "Your Floor Price Alerts",
-            fields: embedFields,
-          },
-        ],
-      }),
-    });
   }
   return new Response(undefined, { statusText: "We okay", status: 200 });
 };

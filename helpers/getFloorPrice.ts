@@ -1,3 +1,5 @@
+import { formatDomain } from "./util.ts";
+
 const reservoirToken = Deno.env.get("RESERVOIR_SECRET");
 const hyperspaceToken = Deno.env.get("HYPERSPACE_API_KEY");
 const reservoirURL = "https://api.reservoir.tools/collections/v5";
@@ -5,7 +7,7 @@ const hyperspaceRestUrl = "https://beta.api.solanalysis.com/rest";
 export const getFloorPrice = async (
   collection: string,
   chain: string
-): Promise<string> => {
+): Promise<{ fp: string, content: string}> => {
   switch (chain) {
     case "eth": {
       const options: any = {
@@ -13,12 +15,15 @@ export const getFloorPrice = async (
         headers: { accept: "*/*", "x-api-key": reservoirToken },
       };
       const res = await fetch(
-        reservoirURL + `?name=${collection}`,
+        reservoirURL + `?slug=${collection}`,
         options
       );
       const results = await res.json();
       const result = results.collections[0];
-      return result.floorAsk.price.amount.decimal;
+      return {
+        fp: result.floorAsk.price.amount.decimal,
+        content: formatDomain(result.floorAsk.sourceDomain, result)
+      }
     }
     case "sol": {
       const res = await fetch(hyperspaceRestUrl + "/get-project-stats", {
@@ -34,9 +39,12 @@ export const getFloorPrice = async (
         }),
       });
       const json = await res.json();
-      return json.project_stats[0].floor_price;
+      return {
+        fp: json.project_stats[0].floor_price,
+        content: `https://hyperspace.xyz/collection/${collection}`
+      }
     }
     default:
-      return "";
+      throw new Error('no floor price found')
   }
 };
