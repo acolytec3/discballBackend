@@ -2,7 +2,7 @@ name: notify
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '* * * * *'
+    - cron: '*/5 * * * *'
 
 jobs:
   notify_friends:
